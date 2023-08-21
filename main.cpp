@@ -71,25 +71,6 @@ constexpr bool operator!= (const Allocator_11<T>& a1, const Allocator_11<U>& a2)
 }
 
 //*****************************************************************
-// template <class T, class Allocator = std::allocator<T>>
-// class MyContainer {
-// public:
-//     MyContainer () = default;
-
-//     void push_back(const T& x)
-//     {
-
-//         size++;
-//     }
-
-// private:
-//     T* data = nullptr;
-//     std::size_t size = 0;
-
-//     Allocator   alloc;
-// };
-
-//*****************************************************************
 
 constexpr int factorial(int k) {
     int res = 1;
@@ -115,9 +96,6 @@ int main()
         m1.insert({i, factorial(i)});
     for (auto el: m)
         std::cout << el.first << " " << el.second << std::endl;
-
-
-
 
     return 0;
 }

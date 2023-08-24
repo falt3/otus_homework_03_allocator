@@ -1,5 +1,6 @@
 #include <iostream>
 #include <map>
+#include <memory>
 
 //*****************************************************************
 
@@ -18,11 +19,16 @@ struct Allocator_11
         std::cout << "Allocator:constructor_copy \n";
         this->m_maxSize = A2.m_maxSize;
     }
-    // Allocator_11(const Allocator_11<T>& A2) noexcept
-    // {
-    //     std::cout << "Allocator:constructor_copy_T \n";
-    //     this->m_maxSize = A2.m_maxSize;
-    // }    
+    Allocator_11(const Allocator_11<T>& A2) noexcept
+    {
+        std::cout << "Allocator:constructor_copy_T\n";
+        m_maxSize = A2.m_maxSize;
+        if (A2.m_pointer != nullptr) {
+            allocate(A2.m_busy);
+            // std::copy(A2.m_pointer, A2.m_pointer + A2.m_busy, m_pointer);
+            std::copy((char *)A2.m_pointer, (char *)(A2.m_pointer + A2.m_busy), (char *)m_pointer);
+        }
+    }    
 
     T* allocate(std::size_t n)
     {
@@ -51,6 +57,10 @@ struct Allocator_11
     }
 
     std::size_t m_maxSize;
+
+    // using propagate_on_container_copy_assignment = std::true_type;
+    // using propagate_on_container_move_assignment = std::true_type;
+    // using prooagate_on_container_swap = std::true_type;
 
 private:
     std::size_t m_busy      = 0;
@@ -87,15 +97,25 @@ int main()
     for (int i = 0; i <= 9; ++i)
         m.insert({i, factorial(i)});
 
-
     using TA = Allocator_11<std::pair<const int, int>>;
     TA alloc1(10);
-//    std::map<int, int, std::less<int>, TA> m1(Allocator_11<TA>(10));
+    // std::map<int, int, std::less<int>, TA> m1(Allocator_11<TA>(10));
     std::map<int, int, std::less<int>, TA> m1(alloc1);
     for (int i = 0; i <= 9; ++i)
         m1.insert({i, factorial(i)});
     for (auto el: m)
         std::cout << el.first << " " << el.second << std::endl;
+
+    // Allocator_11<int> ann(10);
+    // int* z = ann.allocate(1);
+    // *z = 33;
+    // auto bob = ann;
+    // int* a = ann.allocate(1);
+    // *a = 0;
+    // int* b = bob.allocate(1);
+    // *b = 42;
+    // std::cout << *z << " " << *a << std::endl;
+    // std::cout << *(b-1) << " " << *b << std::endl;
 
     return 0;
 }

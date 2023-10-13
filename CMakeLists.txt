@@ -6,17 +6,22 @@ set(PROJECT_VESRION 0.0.${PATCH_VERSION})
 
 project(allocator VERSION ${PROJECT_VESRION})
 
-# find_package(Boost COMPONENTS unit_test_framework REQUIRED)
 
 set(nameApp allocator)
 add_executable(${nameApp} main.cpp)
-# add_executable(testIp test.cpp ip.cpp ip.h)
+
 
 set_target_properties(
     ${nameApp} PROPERTIES
     CXX_STANDARD 14
     CXX_STANDARD_REQUIRED ON
 )
+
+target_compile_options(
+    ${nameApp} PRIVATE
+    -Wall -Wextra -pedantic -Werror
+)
+
 # target_include_directories(listIp PRIVATE 
 #     "${CMAKE_BINARY_DIR}"
 # )
@@ -27,29 +32,18 @@ set_target_properties(
 #     INCLUDE_DIRECTORIES ${Boost_INCLUDE_DIR}
 # )
 
-if (MSVC)
-    target_compile_options(${nameApp} PRIVATE /W4)
-    # target_compile_options(testIp PRIVATE /W4)
-else ()
-    target_compile_options(
-        ${nameApp} PRIVATE
-        -Wall -Wextra -pedantic -Werror
-    )
-    # target_compile_options(
-    #     testIp PRIVATE
-    #     -Wall -Wextra -pedantic -Werror
-    # )
-endif()
+
+
+
 
 # enable_testing()
-# add_test(NAME testFilterIp COMMAND testIp)
 
 
-install(TARGETS ${nameApp} RUNTIME DESTINATION bin)
+# install(TARGETS ${nameApp} RUNTIME DESTINATION bin)
 
-set(CPACK_GENERATOR DEB)
-set(CPACK_PACKAGE_VERSION_MAJOR "${PROJECT_VERSION_MAJOR}")
-set(CPACK_PACKAGE_VERSION_MINOR "${PROJECT_VERSION_MINOR}")
-set(CPACK_PACKAGE_VERSION_PATCH "${PROJECT_VERSION_PATCH}")
-set(CPACK_PACKAGE_CONTACT example@example.com)
-include(CPack)
+# set(CPACK_GENERATOR DEB)
+# set(CPACK_PACKAGE_VERSION_MAJOR "${PROJECT_VERSION_MAJOR}")
+# set(CPACK_PACKAGE_VERSION_MINOR "${PROJECT_VERSION_MINOR}")
+# set(CPACK_PACKAGE_VERSION_PATCH "${PROJECT_VERSION_PATCH}")
+# set(CPACK_PACKAGE_CONTACT example@example.com)
+# include(CPack)

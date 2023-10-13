@@ -22,28 +22,23 @@ target_compile_options(
     -Wall -Wextra -pedantic -Werror
 )
 
-# target_include_directories(listIp PRIVATE 
-#     "${CMAKE_BINARY_DIR}"
-# )
 
-# set_target_properties(
-#     testIp PROPERTIES
-#     COMPILE_DEFINITIONS BOOST_TEST_DYN_LINK
-#     INCLUDE_DIRECTORIES ${Boost_INCLUDE_DIR}
-# )
+add_subdirectory(test)
+target_include_directories(test_allocator PRIVATE ${CMAKE_CURRENT_SOURCE_DIR})
 
+add_test(
+    NAME test_allocator 
+    COMMAND test_allocator
+)
 
 
+install(TARGETS ${nameApp} RUNTIME DESTINATION bin)
 
+set(CPACK_GENERATOR DEB)
+set(CPACK_PACKAGE_VERSION_MAJOR "${PROJECT_VERSION_MAJOR}")
+set(CPACK_PACKAGE_VERSION_MINOR "${PROJECT_VERSION_MINOR}")
+set(CPACK_PACKAGE_VERSION_PATCH "${PROJECT_VERSION_PATCH}")
+set(CPACK_PACKAGE_CONTACT example@example.com)
+include(CPack)
 
-# enable_testing()
-
-
-# install(TARGETS ${nameApp} RUNTIME DESTINATION bin)
-
-# set(CPACK_GENERATOR DEB)
-# set(CPACK_PACKAGE_VERSION_MAJOR "${PROJECT_VERSION_MAJOR}")
-# set(CPACK_PACKAGE_VERSION_MINOR "${PROJECT_VERSION_MINOR}")
-# set(CPACK_PACKAGE_VERSION_PATCH "${PROJECT_VERSION_PATCH}")
-# set(CPACK_PACKAGE_CONTACT example@example.com)
-# include(CPack)
+enable_testing()

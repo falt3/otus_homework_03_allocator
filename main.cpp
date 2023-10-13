@@ -16,7 +16,6 @@
 #include <vector>
 #include "mylist.h"
 #include "myallocator.h"
-// #include "myvector.h"
 
 
 
@@ -27,7 +26,7 @@ constexpr int factorial(int k) {
     return res;
 }
 
-//*****************************************************************
+//-----------------------------------------------------------------
 
 namespace ns_map_stdAlloc
 {
@@ -40,16 +39,15 @@ namespace ns_map_stdAlloc
     }
 }
 
-//*****************************************************************
+//-----------------------------------------------------------------
 
 namespace ns_map_myAlloc
 {
     void work () {
         std::cout << "\n--------------- 2. map & myAllocator ---------------\n";
         
-        using TA = MyAllocator_11<std::pair<const int, int>>;
-        TA alloc1(10);
-        std::map<int, int, std::less<int>, TA> m1(alloc1);
+        using TA = MyAllocator<std::pair<const int, int>, 10>;
+        std::map<int, int, std::less<int>, TA> m1;
 
         for (int i = 0; i <= 9; ++i)
             m1.insert({i, factorial(i)});
@@ -58,7 +56,7 @@ namespace ns_map_myAlloc
     }
 }
 
-//*****************************************************************
+//-----------------------------------------------------------------
 
 namespace ns_myList_stdAlloc 
 {   
@@ -67,21 +65,21 @@ namespace ns_myList_stdAlloc
 
         MyList<int> mylist;
         for (int i = 0; i <= 9; ++i)
-            mylist.push_back(factorial(i));
+            mylist.push_back(i);
     }
 } // namespace ns_mylist_
 
-//*****************************************************************
+//-----------------------------------------------------------------
 
 namespace ns_myList_myAlloc
 {
     void work () {
         std::cout << "\n--------------- 4 myList & myAllocator ---------------\n";
 
-        MyList<int, MyAllocator_11<int>> mylist(MyAllocator_11<int>(10));
+        MyList<int, MyAllocator<int, 10>> mylist;
         int n = 10;
         for (int i = 0; i < n; ++i) {
-            mylist.push_back(factorial(i));
+            mylist.push_back(i);
         }
         for (auto it : mylist) {
             std::cout << it << std::endl;
@@ -90,58 +88,24 @@ namespace ns_myList_myAlloc
 } // namespace ns_mylist_myalloc
 
 
-//*****************************************************************
-
-
-namespace ns3
-{
-    void work() {
-    //     std::cout << "--------------------\n";
-    //     std::cout << "myList & myAllocator: \n";
-    //     using TL = MyAllocator_11<int>;
-    //     TL alloc1(10);        
-    //     MyList<int, TL> mylist(alloc1);
-    //     // MyList<int, MyAllocator_11<int>> mylist(MyAllocator_11<int>(10));
-    //     int n = 10;
-    //     for (int i = 0; i < n; ++i) {
-    //         mylist.push_back(i*10 + i*1);
-    //     }
-    //     for (int i = 0; i < n; ++i) {
-    //         std::cout << mylist.pop_back() << std::endl;
-    //     }
-    }
-} // namespace ns3
+//-----------------------------------------------------------------
 
 namespace ns_myList_blockAlloc
 {
     void work() {
         std::cout << "\n--------------- 5 myList & blockAllocator ---------------\n";
 
-        MyList<int, BlockAllocator<int>> mylist;
-        int n = 20;
-        for (int i = 0; i < n; ++i) {
-            mylist.push_back(i+1);
+        MyList<int, BlockAllocator<int, 10>> mylist;
+        for (int i = 0; i < 16; ++i) {
+            mylist.push_back(i);
         }     
         for (auto it : mylist) {
             std::cout << it << std::endl;
         }
-
-        std::cout << "-----------\n";
-        for (int i = 0; i < 11; ++i)
-            mylist.pop_back();
-        for (auto it : mylist) {
-            std::cout << it << std::endl;
-        }
-           
-
-        // using TA = MyAllocator_11<std::pair<const int, int>>;
-        //             //   MyAllocator<std::pair<int, int>, RANGE
-        // TA alloc1(10);
-        // std::map<int, int, std::less<int>, TA> m1(alloc1);        
     }
 } // namespace ns_myList_blockAlloc
 
-//*****************************************************************
+//-----------------------------------------------------------------
 
 int main()
 {
@@ -154,8 +118,6 @@ int main()
     ns_myList_myAlloc::work();
     
     ns_myList_blockAlloc::work();
-
-    // ns3::work();
 
     return 0;
 }

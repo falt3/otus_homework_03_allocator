@@ -1,179 +1,187 @@
+#pragma once
+
 #include <memory>
 #include <vector>
 #include <algorithm>
 
-
 //-------------------------------------------------------------------
+/**
+ * @brief Класс обертки аллокатора для передачи размера
+ * 
+ * @tparam SIZE Количество элементов для котроых надо выделить
+ */
+template <size_t SIZE> 
+struct MyAllocator_Wrapper {
 
-template <typename T>
-struct MyAllocator_11_simple {
-    using value_type = T;
-
-    MyAllocator_11_simple() noexcept {}
-    
-    T* allocate(std::size_t n) {
-        return static_cast<T*>(::operator new(n * sizeof(T)));
-    }
-    void deallocate(T* p, std::size_t /*n*/) {
-        ::operator delete(p);
-    }
-};
-
-//-------------------------------------------------------------------
-
-template <class T>
-struct MyAllocator_11
-{
-    using value_type =  T;
-
-    MyAllocator_11(std::size_t maxSize) noexcept : m_maxSize(maxSize)
+    /**
+     * @brief 
+     * 
+     * @tparam T 
+     */
+    template <class T>
+    struct MyAllocator_11
     {
-        std::cout << "Allocator:constructor " << m_maxSize << "\n";
-    }
-    template <class U>
-    MyAllocator_11(const MyAllocator_11<U>& A2) noexcept
-    {
-        std::cout << "Allocator:constructor_copy \n";
-        this->m_maxSize = A2.m_maxSize;
-    }
-    MyAllocator_11(const MyAllocator_11<T>& A2) noexcept
-    {
-        std::cout << "Allocator:constructor_copy_T\n";
-        m_maxSize = A2.m_maxSize;
-        if (A2.m_pointer != nullptr) {
-            allocate(A2.m_busyCount);
-            // std::copy(A2.m_pointer, A2.m_pointer + A2.m_busy, m_pointer);
-            std::copy((char *)A2.m_pointer, (char *)(A2.m_pointer + A2.m_busyCount), (char *)m_pointer);
-        }
-    }    
-    ~MyAllocator_11() {
-        if (m_pointer) {
-            std::cout << "Allocator:deallocate "<< " " << m_pointer << std::endl;
-            ::operator delete(m_pointer);
-            m_pointer = nullptr;
-        }
-    }
-    std::size_t countFreeMemory() { return m_maxSize - m_busyCount; }
-    bool checkMemory(T* ptr) { 
-        if (ptr >= m_pointer) {
-            std::size_t j = ptr - m_pointer;
-            return j < m_maxSize;
-        }
-        else 
-            return false;
-    }
+        using value_type =  T;
 
-    T* allocate(std::size_t n)
-    {
-        if (n > 1) throw "error";
-        // std::cout << "allocate: " << n << " " << m_pointer << " " << m_maxSize << " " << sizeof(T) << "\n";
-        if (m_pointer == nullptr) { // выделить память
-            m_pointer = static_cast<T*>(::operator new(m_maxSize * sizeof(T)));
-            if (m_mapBusyMemory.size() == 0)
-                m_mapBusyMemory.resize(m_maxSize, 0);
-            // std::cout << "Allocator:allocate " << m_pointer << " " << m_maxSize*sizeof(T) << " " << m_mapBusyMemory.size() << std::endl;
+        MyAllocator_11() noexcept {}
+        template <class U>
+        // MyAllocator_11(const MyAllocator_11<U>& A2) noexcept {}
+        MyAllocator_11(const MyAllocator_11<T>& A2) noexcept = delete;
+        ~MyAllocator_11() {
+            if (m_pointer) {
+                // std::cout << "Allocator:deallocate "<< " " << m_pointer << std::endl;
+                ::operator delete(m_pointer);
+                m_pointer = nullptr;
+            }
         }
-        if (m_busyCount == m_maxSize) { // память вся использована -> исключение
-            // std::cout << "Allocator:allocate exception \n";
+        /**
+         * @brief Возвращает количество свободной памяти
+         * 
+         * @return std::size_t 
+         */
+        std::size_t countFreeMemory() { return SIZE - m_countMemoryBusy; }
+        
+        /**
+         * @brief Возвращает true, если адрес лежит в выделенной облати аллокатора
+         * 
+         * @param ptr 
+         * @return true 
+         * @return false 
+         */
+        bool checkMemory(T* ptr) { 
+            if (ptr >= m_pointer) {
+                std::size_t j = ptr - m_pointer;
+                return j < SIZE;
+            }
+            else 
+                return false;
+        }
+
+        T* allocate(std::size_t n)
+        {
+            if (n > 1) throw "error";
+            // std::cout << "allocate: " << n << " " << m_pointer << " " << SIZE << " " << sizeof(T) << "\n";
+            if (m_pointer == nullptr) { // выделить память
+                m_pointer = static_cast<T*>(::operator new(SIZE * sizeof(T)));
+                if (m_mapMemoryBusy.size() == 0)
+                    m_mapMemoryBusy.resize(SIZE, 0);
+                // std::cout << "Allocator:allocate " << m_pointer << " " << SIZE*sizeof(T) << " " << m_mapBusyMemory.size() << std::endl;
+            }
+            if (m_countMemoryBusy == SIZE) { // память вся использована -> исключение
+                // std::cout << "Allocator:allocate exception \n";
+                throw "error";
+            }
+            for (std::size_t j = 0; j < SIZE; ++j) {
+                if (m_mapMemoryBusy[j] == 0) {
+                    m_mapMemoryBusy[j] = 1;
+                    ++m_countMemoryBusy;
+                    // std::cout << "  return  " << m_countMemoryBusy << " " << j << "\t" << (m_pointer + j) << "\n";
+                    return m_pointer + j;
+                }
+            }
             throw "error";
         }
-        for (std::size_t j = 0; j < m_maxSize; ++j) {
-            if (m_mapBusyMemory[j] == 0) {
-                m_mapBusyMemory[j] = 1;
-                ++m_busyCount;
-                // std::cout << "  return  " << m_busyCount << " " << j << "\t" << (m_pointer + j) << "\n";
-                return m_pointer + j;
+
+        void deallocate(T* ptr, std::size_t /*n*/)
+        {
+            if (ptr >= m_pointer) {
+                std::size_t j = ptr - m_pointer;
+                // std::cout << "Allocator:deallocate: j:" << j << std::endl;
+                if (j < SIZE) {
+                    m_mapMemoryBusy[j] = 0;
+                    m_countMemoryBusy--;
+                }
             }
         }
-        throw "error";
-    }
 
-    void deallocate(T* ptr, std::size_t /*n*/)
-    {
-        if (ptr >= m_pointer) {
-            std::size_t j = ptr - m_pointer;
-            // std::cout << "Allocator:deallocate: j:" << j << std::endl;
-            if (j < m_maxSize) {
-                m_mapBusyMemory[j] = 0;
-                m_busyCount--;
-            }
-        }
-    }
+        // using propagate_on_container_copy_assignment = std::true_type;
+        // using propagate_on_container_move_assignment = std::true_type;
+        // using prooagate_on_container_swap = std::true_type;
 
-    std::size_t m_maxSize;
-
-    // using propagate_on_container_copy_assignment = std::true_type;
-    // using propagate_on_container_move_assignment = std::true_type;
-    // using prooagate_on_container_swap = std::true_type;
-
-private:
-    std::size_t m_busyCount = 0;
-    T*          m_pointer   = nullptr;
-    std::vector<char> m_mapBusyMemory;
+    private:
+        T*          m_pointer   = nullptr;      // Указатель на начало выделенной памяти
+        std::size_t m_countMemoryBusy = 0;      // Количество занятых ячеек памяти
+        std::vector<char> m_mapMemoryBusy;      // Карта занятых ячеек памяти (0 - свободная, 1 - занятая)
+    };
 };
 
-
-template <class T, class U>
-constexpr bool operator== (const MyAllocator_11<T>& a1, const MyAllocator_11<U>& a2) noexcept
+template <class T, size_t TS, class U, size_t US>
+constexpr bool operator== (const typename MyAllocator_Wrapper<TS>::MyAllocator_11<T>& a1, 
+                           const typename MyAllocator_Wrapper<US>::MyAllocator_11<U>& a2) noexcept
 {
     return true;
 }
 
-template <class T, class U>
-constexpr bool operator!= (const MyAllocator_11<T>& a1, const MyAllocator_11<U>& a2) noexcept
+template <class T, size_t TS, class U, size_t US>
+constexpr bool operator!= (const typename MyAllocator_Wrapper<TS>::MyAllocator_11<T>& a1, 
+                           const typename MyAllocator_Wrapper<US>::MyAllocator_11<U>& a2) noexcept
 {
     return false;
 }
+
+template <typename T, size_t SIZE = 100>
+using MyAllocator = typename MyAllocator_Wrapper<SIZE>::MyAllocator_11<T>;
 
 //-------------------------------------------------------------------
 /**
- * @brief 
+ * @brief Класс 
  * 
- * @tparam T 
+ * @tparam SIZE 
  */
-template <class T>
-struct BlockAllocator {
-    using value_type =  T;
+template <size_t SIZE> 
+struct BlockAllocator_Wrapper {
 
-    BlockAllocator() noexcept {}
-    // template <class U>
-    // BlockAllocator(const BlockAllocator<U>& A2) noexcept {}
-    // BlockAllocator(const BlockAllocator<T>& A2) noexcept {}
+    template <class T>
+    struct BlockAllocator {
+        using value_type =  T;
 
-    T* allocate(std::size_t n) {
-        for (std::size_t i = 0; i < pool.size(); ++i) {
-            if (pool[i]->countFreeMemory()) {
-                return pool[i]->allocate(n);
+        BlockAllocator() noexcept {}
+        template <class U>
+        BlockAllocator(const BlockAllocator<U>& A2) noexcept = delete;
+        BlockAllocator(const BlockAllocator<T>& A2) noexcept = delete;
+
+        T* allocate(std::size_t n) {
+            for (std::size_t i = 0; i < pages.size(); ++i) {
+                if (pages[i]->countFreeMemory()) {
+                    return pages[i]->allocate(n);
+                }
+            }
+            auto ptr = std::unique_ptr<MyAllocator<T, SIZE>>(new MyAllocator<T, SIZE>);
+            pages.push_back(std::move(ptr));
+            return pages.back()->allocate(n);
+        }
+
+        void deallocate(T* ptr, std::size_t n) {
+            auto it = std::find_if(pages.cbegin(), pages.cend(), [ptr](auto& el) {
+                return el->checkMemory(ptr);
+            });
+            if (it != pages.end()) {
+                (*it)->deallocate(ptr, n);
+                if ((*it)->countFreeMemory() == SIZE) 
+                    pages.erase(it);
             }
         }
-        auto ptr = std::unique_ptr<MyAllocator_11<T>>(new MyAllocator_11<T>(10));
-        pool.push_back(std::move(ptr));
-        return pool.back()->allocate(n);
-    }
 
-    void deallocate(T* ptr, std::size_t n) {
-        auto it = std::find_if(pool.cbegin(), pool.cend(), [ptr](auto& el) {
-            return el->checkMemory(ptr);
-        });
-        if (it != pool.end()) {
-            (*it)->deallocate(ptr, n);
-            if ((*it)->countFreeMemory() == 10) 
-                pool.erase(it);
-        }
-    }
-private:
-    std::vector<std::unique_ptr<MyAllocator_11<T>>> pool;
+        size_t countPages() { return pages.size(); }
+    private:
+        std::vector<std::unique_ptr<MyAllocator<T, SIZE>>> pages;
+    };
 };
 
 
-template <class T, class U>
-constexpr bool operator== (const BlockAllocator<T>& a1, const BlockAllocator<U>& a2) noexcept
+template <class T, size_t TS, class U, size_t US>
+constexpr bool operator== (const typename BlockAllocator_Wrapper<TS>::BlockAllocator<T>& a1, 
+                           const typename BlockAllocator_Wrapper<US>::BlockAllocator<U>& a2) noexcept
 {
     return true;
 }
 
-template <class T, class U>
-constexpr bool operator!= (const BlockAllocator<T>& a1, const BlockAllocator<U>& a2) noexcept
+template <class T, size_t TS, class U, size_t US>
+constexpr bool operator!= (const typename BlockAllocator_Wrapper<TS>::BlockAllocator<T>& a1, 
+                           const typename BlockAllocator_Wrapper<US>::BlockAllocator<U>& a2) noexcept
 {
     return false;
 }
+
+template <typename T, size_t SIZE = 100>
+using BlockAllocator = typename BlockAllocator_Wrapper<SIZE>::BlockAllocator<T>;

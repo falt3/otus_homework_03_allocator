@@ -27,7 +27,6 @@ public:
             return *this;
         }
         T operator*() { return m_current->data; }
-        // Node* operator->() { return m_current; }
         bool operator==(iterator other) { return m_current == other.m_current; }
         bool operator!=(iterator other) { return m_current != other.m_current; }
     };
@@ -52,6 +51,7 @@ public:
         return nodeNext;
     }
     int size() { return m_size; }
+    bool empty() { return m_first == nullptr; }
 
     iterator begin() { return m_first; }
     iterator end() { return nullptr; }
@@ -65,28 +65,17 @@ private:
 };
 
 
-
-
 template <typename T, typename Allocator>
 void MyList<T, Allocator>::push_back(const T &x)
 {
-// auto *new_node = NodeAllocatorTraits::allocate(_allocator, 1);  // NOLINT
-// NodeAllocatorTraits::construct(_allocator, new_node, data);
-
-    // std::cout << "----1\n";
-    // Node* newNode = m_allocator.allocate(1);
     Node* newNode = NodeAllocatorTraits::allocate(m_allocator, 1);  // NOLINT
-    // std::cout << "----2\n";
-    // std::allocator_traits<NodeAllocator>::construct(m_allocator, newNode, x);
     NodeAllocatorTraits::construct(m_allocator, newNode, x);
-    // std::cout << "----3\n";
     if (m_size == 0)            
         m_first = newNode;
     else {
         m_last->next = newNode;
         newNode->prev = m_last;
     }
-    // std::cout << "----4\n";
     m_last = newNode;
     m_size++;
 }

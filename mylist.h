@@ -33,6 +33,17 @@ public:
 
     MyList() noexcept {};
     MyList(Allocator alloc) : m_allocator(alloc) {}
+    MyList(MyList& other) {
+        for (auto it = other.begin(); it != other.end(); ++it) {
+            push_back(*it);
+        }
+    }
+    MyList(MyList&& other) = delete;
+    MyList& operator=(const MyList& other) = delete;
+    MyList& operator=(MyList&& other) = delete;
+    ~MyList() {
+        for (auto it = begin(); it != end(); it = erase(it)) {}
+    }
 
     
     void push_back (const T& x);

@@ -53,9 +53,13 @@ public:
         Node *node = pos.m_current;
         if (node->prev)
             node->prev->next = node->next;
+        else 
+            m_first = node->next;
         Node* nodeNext = node->next;
         if (node->next)
             node->next->prev = node->prev;
+        else 
+            m_last = node->prev;
         std::allocator_traits<NodeAllocator>::destroy(m_allocator, node);
         m_allocator.deallocate(node, 1);
         m_size--;
